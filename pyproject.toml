@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "naan"
 description = ''
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 license = "MIT"
 keywords = []
 authors = [
@@ -15,9 +15,6 @@ authors = [
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.7",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: Implementation :: CPython",
@@ -39,23 +36,43 @@ path = "naan/__about__.py"
 
 [tool.hatch.envs.default]
 dependencies = [
+  "coverage[toml]>=6.5",
   "pytest",
-  "pytest-cov",
 ]
-[tool.hatch.envs.default.scripts]
-test = "pytest {args}"
-cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=naan --cov=tests {args}"
-no-cov = "cov --no-cov {args}"
 
-[[tool.hatch.envs.test.matrix]]
-python = ["37", "38", "39", "310", "311"]
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov-report = [
+  "- coverage combine",
+  "coverage report",
+]
+cov = [
+  "test-cov",
+  "cov-report",
+]
+
+[[tool.hatch.envs.all.matrix]]
+python = ["3.10", "3.11", "3.12"]
+
+[tool.hatch.envs.types]
+dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/stocaz tests}"
 
 [tool.coverage.run]
+source_pkgs = ["stocaz", "tests"]
 branch = true
 parallel = true
 omit = [
-  "naan/__about__.py",
+  "src/stocaz/__about__.py",
 ]
+
+[tool.coverage.paths]
+stocaz = ["src/stocaz", "*/stocaz/src/stocaz"]
+tests = ["tests", "*/stocaz/tests"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -63,3 +80,18 @@ exclude_lines = [
   "if __name__ == .__main__.:",
   "if TYPE_CHECKING:",
 ]
+
+[tool.ruff]
+lint.ignore = [
+  # Allow non-abstract empty methods in abstract base classes
+  "B027",
+  # Allow boolean positional values in function calls, like `dict.get(... True)`
+  "FBT003",
+  # Ignore checks for possible passwords
+  "S105", "S106", "S107",
+  # Ignore complexity
+  "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
+]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "parents"

@@ -2,18 +2,17 @@
 #
 # SPDX-License-Identifier: MIT
 
-from typing import Optional, Union
 from pathlib import Path
 
-import faiss
 import duckdb
+import faiss
 
 from .queries import CREATE_VECTORS_META, INSERT_VECTORS_META, SELECT_VECTORS_META
 
 
 class NaanDB:
     def __init__(
-        self, path: Union[str, Path], faiss_index: Optional[faiss.Index] = None
+        self, path: str | Path, faiss_index: faiss.Index | None = None
     ) -> None:
         self._set_path(path)
         self._index = faiss_index
@@ -22,7 +21,8 @@ class NaanDB:
 
         if self._path.exists() and any(self._path.iterdir()):
             if set(self._path.iterdir()) != {self._db_file, self._index_file}:
-                raise ValueError("Database directory not empty")
+                msg = "Database directory not empty"
+                raise ValueError(msg)
             self._load()
         else:
             self._init()
@@ -34,7 +34,8 @@ class NaanDB:
     @property
     def index(self):
         if self._index is None:
-            raise ValueError("FAISS index is None")
+            msg = "FAISS index is None"
+            raise ValueError(msg)
         return self._index
 
     @property
@@ -42,15 +43,11 @@ class NaanDB:
         return self.index.is_trained
 
     def search(self, *args, **kwargs):
-        _, I = self.index.search(*args, **kwargs)
-        res = []
-        for idx in I[0]:
-            res.append(
-                self._conn.execute(
-                    SELECT_VECTORS_META, {"vector_id": int(idx)}
-                ).fetchone()
-            )
-        return res
+        _, indices = self.index.search(*args, **kwargs)
+        return [
+            self._conn.execute(SELECT_VECTORS_META, {"vector_id": int(idx)}).fetchone()
+            for idx in indices[0]
+        ]
 
     def add(self, embeddings, texts):
         next_id = self.index.ntotal
@@ -61,10 +58,11 @@ class NaanDB:
             )
             next_id += 1
 
-    def _set_path(self, path: Union[str, Path]):
+    def _set_path(self, path: str | Path):
         self._path = Path(path)
         if self._path.is_file():
-            raise ValueError("Naan database must be a directory")
+            msg = "Naan database must be a directory"
+            raise ValueError(msg)
 
     def _init(self):
         self._path.mkdir()
