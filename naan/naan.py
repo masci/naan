@@ -8,24 +8,20 @@ import duckdb
 import faiss
 
 from .queries import CREATE_VECTORS_META, INSERT_VECTORS_META, SELECT_VECTORS_META
+from .filesystem import StorageFolder
 
 
 class NaanDB:
     def __init__(
-        self, path: str | Path, faiss_index: faiss.Index | None = None
+        self,
+        path: str | Path,
+        faiss_index: faiss.Index | None = None,
+        force_recreate: bool = False,
     ) -> None:
-        self._set_path(path)
+        self._storage = StorageFolder(Path(path), force=force_recreate)
         self._index = faiss_index
-        self._db_file = self._path / f"{self._path.name}.db"
-        self._index_file = self._path / f"{self._path.name}.faiss"
-
-        if self._path.exists() and any(self._path.iterdir()):
-            if set(self._path.iterdir()) != {self._db_file, self._index_file}:
-                msg = "Database directory not empty"
-                raise ValueError(msg)
-            self._load()
-        else:
-            self._init()
+        self._conn = duckdb.connect(database=str(self._storage.db_file))
+        self._init()
 
     @property
     def name(self):
@@ -50,9 +46,11 @@ class NaanDB:
         ]
 
     def add(self, embeddings, texts):
-        next_id = self.index.ntotal
-        self.index.add(embeddings)
+        next_id = self.index.ntotal + 1
+        self.index.add(embeddings)  # type:ignore
+        faiss.write_index(self.index, str(self._storage.index_file))
         for text in texts:
+            print(next_id)
             self._conn.execute(
                 INSERT_VECTORS_META, {"vector_id": next_id, "text": text}
             )
@@ -65,14 +63,8 @@ class NaanDB:
             raise ValueError(msg)
 
     def _init(self):
-        self._path.mkdir()
-        self._conn = duckdb.connect(database=str(self._db_file))
-        self._conn.execute(CREATE_VECTORS_META)
-        faiss.write_index(self.index, str(self._index_file))
-
-    def _load(self):
-        self._conn = duckdb.connect(database=str(self._db_file))
-        self._index = faiss.read_index(str(self._index_file))
-
-    def _insert_vector(self):
-        pass
+        if not self._storage.ready:
+            self._conn.execute(CREATE_VECTORS_META)
+            faiss.write_index(self.index, str(self._storage.index_file))
+        else:
+            self._index = faiss.read_index(str(self._storage.index_file))
