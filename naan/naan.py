@@ -46,15 +46,13 @@ class NaanDB:
         ]
 
     def add(self, embeddings, texts):
-        next_id = self.index.ntotal + 1
+        next_id = self.index.ntotal
         self.index.add(embeddings)  # type:ignore
         faiss.write_index(self.index, str(self._storage.index_file))
-        for text in texts:
-            print(next_id)
+        for i, text in enumerate(texts):
             self._conn.execute(
-                INSERT_VECTORS_META, {"vector_id": next_id, "text": text}
+                INSERT_VECTORS_META, {"vector_id": next_id + i, "text": text}
             )
-            next_id += 1
 
     def _set_path(self, path: str | Path):
         self._path = Path(path)

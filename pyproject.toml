@@ -36,6 +36,12 @@ Source = "https://github.com/unknown/naan"
 [tool.hatch.version]
 path = "naan/__about__.py"
 
+[tool.hatch.build]
+exclude = [
+  "/example",
+  "/tests",
+]
+
 [tool.hatch.envs.default]
 dependencies = [
   "coverage[toml]>=6.5",
