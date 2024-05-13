@@ -29,6 +29,6 @@ jobs:
     - name: Lint with Hatch
       run: |
         hatch fmt
-    - name: Test 
+    - name: Test
       run: |
-        hatch run test
+        hatch run cov
