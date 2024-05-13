@@ -49,6 +49,19 @@ def test_search(tmp_path, index):
     db.add(vectors, texts)
     res = db.search(np.array([np.random.rand(384)]), 3)
     assert len(res) == 3
+    for doc in res:
+        assert doc.embeddings is None
+
+
+def test_search_w_embeddings(tmp_path, index):
+    vectors = np.array([np.random.rand(384) for i in range(10)])
+    texts = ["foo"] * 10
+    db = NaanDB(tmp_path / "test", index)
+    db.add(vectors, texts)
+    res = db.search(np.array([np.random.rand(384)]), 3, return_embeddings=True)
+    assert len(res) == 3
+    for doc in res:
+        assert doc.embeddings is not None
 
 
 def test_search_too_many_k(tmp_path, index):

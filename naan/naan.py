@@ -44,7 +44,7 @@ class NaanDB:
     @property
     def is_trained(self) -> bool:
         """Returns whether the FAISS index is trained or not."""
-        return self.index.is_trained
+        return self.index.is_trained  # type:ignore
 
     def search(
         self,
@@ -98,7 +98,7 @@ class NaanDB:
         print(len(embeddings), len(texts))
         assert len(embeddings) == len(texts)
 
-        next_id = self.index.ntotal
+        next_id = self.index.ntotal  # type:ignore
         self.index.add(embeddings)  # type:ignore
         faiss.write_index(self.index, str(self._storage.index_file))
         self._conn.execute("BEGIN;")
