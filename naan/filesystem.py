@@ -3,9 +3,8 @@
 # SPDX-License-Identifier: MIT
 
 import logging
-from pathlib import Path
 import shutil
-
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -14,11 +13,11 @@ INDEX_FILENAME_PATTERN = "{}.faiss"
 
 
 class StorageFolder:
-    def __init__(self, path: Path, force: bool = False) -> None:
+    def __init__(self, path: Path, *, force: bool = False) -> None:
         try:
             path.mkdir(exist_ok=True)
         except FileExistsError as e:
-            logger.error(f"Path {path.name} should be a directory")
+            logger.exception("Path %s should be a directory", path.name)
             raise e from None
 
         self._path = path

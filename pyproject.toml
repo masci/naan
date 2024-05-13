@@ -68,19 +68,18 @@ dependencies = [
   "mypy>=1.0.0",
 ]
 [tool.hatch.envs.types.scripts]
-check = "mypy --install-types --non-interactive {args:src/stocaz tests}"
+check = "mypy --install-types --non-interactive {args:src/naan tests}"
 
 [tool.coverage.run]
-source_pkgs = ["stocaz", "tests"]
+source_pkgs = ["naan", "tests"]
 branch = true
 parallel = true
 omit = [
-  "src/stocaz/__about__.py",
+  "src/naan/__about__.py",
 ]
 
 [tool.coverage.paths]
-stocaz = ["src/stocaz", "*/stocaz/src/stocaz"]
-tests = ["tests", "*/stocaz/tests"]
+tests = ["tests"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -100,6 +99,7 @@ lint.ignore = [
   # Ignore complexity
   "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
 ]
+exclude = ["example"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "parents"
