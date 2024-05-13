@@ -19,3 +19,7 @@ INSERT INTO vectors_meta(vector_id, text, embeddings) VALUES ($vector_id, $text,
 SELECT_VECTORS_META = """
 SELECT (vector_id, text, embeddings) FROM vectors_meta WHERE vector_id == $vector_id
 """
+
+SELECT_VECTORS_META_NO_EMBEDDINGS = """
+SELECT (vector_id, text) FROM vectors_meta WHERE vector_id == $vector_id
+"""

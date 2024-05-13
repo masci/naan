@@ -10,7 +10,12 @@ import numpy
 
 from .document import Document
 from .filesystem import StorageFolder
-from .queries import CREATE_VECTORS_META, INSERT_VECTORS_META, SELECT_VECTORS_META
+from .queries import (
+    CREATE_VECTORS_META,
+    INSERT_VECTORS_META,
+    SELECT_VECTORS_META,
+    SELECT_VECTORS_META_NO_EMBEDDINGS,
+)
 
 
 class NaanDB:
@@ -42,7 +47,14 @@ class NaanDB:
         return self.index.is_trained
 
     def search(
-        self, x: numpy.ndarray, k: int, *, params=None, D=None, I=None
+        self,
+        x: numpy.ndarray,
+        k: int,
+        *,
+        params=None,
+        D=None,
+        I=None,
+        return_embeddings: bool = False,
     ) -> list[Document]:
         """
         Search for vectors in the Naan database.
@@ -55,21 +67,23 @@ class NaanDB:
             params: Search parameters of the current search, see FAISS docs for details.
             D: Distance array to store the result.
             I: Labels array to store the results.
+            return_embeddings: whether to return embeddings within the document objects
 
         Returns:
             documents: the list of Naan Documents found.
         """
         _, labels = self.index.search(x, k, params=params, D=D, I=I)  # type:ignore
         documents: list[Document] = []
+        query = (
+            SELECT_VECTORS_META
+            if return_embeddings
+            else SELECT_VECTORS_META_NO_EMBEDDINGS
+        )
         for idx in labels[0]:
-            res = self._conn.execute(
-                SELECT_VECTORS_META, {"vector_id": int(idx)}
-            ).fetchone()
+            res = self._conn.execute(query, {"vector_id": int(idx)}).fetchone()
             if res:
                 res = res[0]
-                documents.append(
-                    Document(vector_id=res[0], content=res[1], embeddings=res[2])
-                )
+                documents.append(Document(*res))
 
         return documents
 
