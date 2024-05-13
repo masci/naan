@@ -1,7 +1,7 @@
 import json
 
-import faiss
 from sentence_transformers import SentenceTransformer
+import faiss
 
 from naan import NaanDB
 

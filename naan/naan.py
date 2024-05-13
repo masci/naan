@@ -7,6 +7,7 @@ from pathlib import Path
 import duckdb
 import faiss
 
+from .document import Document
 from .filesystem import StorageFolder
 from .queries import CREATE_VECTORS_META, INSERT_VECTORS_META, SELECT_VECTORS_META
 
@@ -39,16 +40,26 @@ class NaanDB:
     def is_trained(self) -> bool:
         return self.index.is_trained
 
-    def search(self, *args, **kwargs):
+    def search(self, *args, **kwargs) -> list[Document]:
         _, indices = self.index.search(*args, **kwargs)
-        return [self._conn.execute(SELECT_VECTORS_META, {"vector_id": int(idx)}).fetchone() for idx in indices[0]]
+        documents: list[Document] = []
+        for idx in indices[0]:
+            res = self._conn.execute(
+                SELECT_VECTORS_META, {"vector_id": int(idx)}
+            ).fetchone()
+            if res:
+                documents.append(Document(*res))
+
+        return documents
 
     def add(self, embeddings, texts):
         next_id = self.index.ntotal
         self.index.add(embeddings)  # type:ignore
         faiss.write_index(self.index, str(self._storage.index_file))
         for i, text in enumerate(texts):
-            self._conn.execute(INSERT_VECTORS_META, {"vector_id": next_id + i, "text": text})
+            self._conn.execute(
+                INSERT_VECTORS_META, {"vector_id": next_id + i, "text": text}
+            )
 
     def _set_path(self, path: str | Path):
         self._path = Path(path)

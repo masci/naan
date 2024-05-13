@@ -3,5 +3,5 @@ from dataclasses import dataclass
 
 @dataclass
 class Document:
-    idx: int
+    vector_id: int
     content: str
