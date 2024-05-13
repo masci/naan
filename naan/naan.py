@@ -17,7 +17,7 @@ class NaanDB:
     def __init__(
         self,
         path: str | Path,
-        faiss_index: faiss.Index | None = None,
+        faiss_index: faiss.Index,
         *,
         force_recreate: bool = False,
     ) -> None:
@@ -29,19 +29,11 @@ class NaanDB:
     @property
     def name(self):
         """Returns the name of the Naan database"""
-        return self._path.name
+        return self._storage.name
 
     @property
     def index(self):
-        """
-        Returns the FAISS index.
-
-        Raises:
-            ValueError: if the FAISS index is not set.
-        """
-        if self._index is None:
-            msg = "FAISS index is None"
-            raise ValueError(msg)
+        """Returns the raw FAISS index."""
         return self._index
 
     @property
@@ -67,7 +59,7 @@ class NaanDB:
         Returns:
             documents: the list of Naan Documents found.
         """
-        _, labels = self.index.search(x, k, params, D, I)
+        _, labels = self.index.search(x, k, params=params, D=D, I=I)  # type:ignore
         documents: list[Document] = []
         for idx in labels[0]:
             res = self._conn.execute(
@@ -93,12 +85,6 @@ class NaanDB:
             self._conn.execute(
                 INSERT_VECTORS_META, {"vector_id": next_id + i, "text": text}
             )
-
-    def _set_path(self, path: str | Path):
-        self._path = Path(path)
-        if self._path.is_file():
-            msg = "Naan database must be a directory"
-            raise ValueError(msg)
 
     def _init(self):
         if not self._storage.ready:

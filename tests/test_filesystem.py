@@ -7,6 +7,7 @@ def test_defaults(tmp_path):
     storage = StorageFolder(tmp_path / "test")
     assert storage.db_file.name == "test.db"
     assert storage.index_file.name == "test.faiss"
+    assert storage.name == "test"
 
 
 def test_init_path_is_file(tmp_path):

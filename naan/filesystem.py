@@ -21,6 +21,7 @@ class StorageFolder:
             raise e from None
 
         self._path = path
+        self._name = path.name
         self._db_file = self._path / DB_FILENAME_PATTERN.format(path.name)
         self._index_file = self._path / INDEX_FILENAME_PATTERN.format(path.name)
 
@@ -46,3 +47,7 @@ class StorageFolder:
     @property
     def index_file(self):
         return self._index_file
+
+    @property
+    def name(self):
+        return self._name
