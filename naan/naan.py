@@ -6,6 +6,7 @@ from pathlib import Path
 
 import duckdb
 import faiss
+import numpy
 
 from .document import Document
 from .filesystem import StorageFolder
@@ -27,10 +28,17 @@ class NaanDB:
 
     @property
     def name(self):
+        """Returns the name of the Naan database"""
         return self._path.name
 
     @property
     def index(self):
+        """
+        Returns the FAISS index.
+
+        Raises:
+            ValueError: if the FAISS index is not set.
+        """
         if self._index is None:
             msg = "FAISS index is None"
             raise ValueError(msg)
@@ -38,12 +46,30 @@ class NaanDB:
 
     @property
     def is_trained(self) -> bool:
+        """Returns whether the FAISS index is trained or not."""
         return self.index.is_trained
 
-    def search(self, *args, **kwargs) -> list[Document]:
-        _, indices = self.index.search(*args, **kwargs)
+    def search(
+        self, x: numpy.ndarray, k: int, *, params=None, D=None, I=None
+    ) -> list[Document]:
+        """
+        Search for vectors in the Naan database.
+
+        This method has the same interface as FAISS for convenience.
+
+        Parameters:
+            x: Query vectors, shape (n, d) where d is appropriate for the index.
+            k: Number of nearest neighbors to retrieve.
+            params: Search parameters of the current search, see FAISS docs for details.
+            D: Distance array to store the result.
+            I: Labels array to store the results.
+
+        Returns:
+            documents: the list of Naan Documents found.
+        """
+        _, labels = self.index.search(x, k, params, D, I)
         documents: list[Document] = []
-        for idx in indices[0]:
+        for idx in labels[0]:
             res = self._conn.execute(
                 SELECT_VECTORS_META, {"vector_id": int(idx)}
             ).fetchone()
@@ -53,6 +79,13 @@ class NaanDB:
         return documents
 
     def add(self, embeddings, texts):
+        """
+        Add contents to the Naan database.
+
+        Parameters:
+            embeddings: vectors to add to the FAISS index
+            texts: list of text to store as metadata
+        """
         next_id = self.index.ntotal
         self.index.add(embeddings)  # type:ignore
         faiss.write_index(self.index, str(self._storage.index_file))
