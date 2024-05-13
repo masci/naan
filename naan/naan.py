@@ -17,7 +17,7 @@ class NaanDB:
     def __init__(
         self,
         path: str | Path,
-        faiss_index: faiss.Index,
+        faiss_index: faiss.Index | None = None,
         *,
         force_recreate: bool = False,
     ) -> None:
@@ -66,7 +66,10 @@ class NaanDB:
                 SELECT_VECTORS_META, {"vector_id": int(idx)}
             ).fetchone()
             if res:
-                documents.append(Document(*res))
+                res = res[0]
+                documents.append(
+                    Document(vector_id=res[0], content=res[1], embeddings=res[2])
+                )
 
         return documents
 
@@ -78,13 +81,19 @@ class NaanDB:
             embeddings: vectors to add to the FAISS index
             texts: list of text to store as metadata
         """
+        print(len(embeddings), len(texts))
+        assert len(embeddings) == len(texts)
+
         next_id = self.index.ntotal
         self.index.add(embeddings)  # type:ignore
         faiss.write_index(self.index, str(self._storage.index_file))
+        self._conn.execute("BEGIN;")
         for i, text in enumerate(texts):
             self._conn.execute(
-                INSERT_VECTORS_META, {"vector_id": next_id + i, "text": text}
+                INSERT_VECTORS_META,
+                {"vector_id": next_id + i, "text": text, "embeddings": embeddings[i]},
             )
+        self._conn.execute("COMMIT;")
 
     def _init(self):
         if not self._storage.ready:
