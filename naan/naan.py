@@ -6,7 +6,7 @@ from pathlib import Path
 
 import duckdb
 import faiss
-import numpy
+import numpy as np
 
 from .document import Document
 from .filesystem import StorageFolder
@@ -48,12 +48,12 @@ class NaanDB:
 
     def search(
         self,
-        x: numpy.ndarray,
+        x: np.ndarray,
         k: int,
         *,
         params=None,
-        D=None,
-        I=None,
+        D=None,  # noqa
+        I=None,  # noqa
         return_embeddings: bool = False,
     ) -> list[Document]:
         """
@@ -74,11 +74,7 @@ class NaanDB:
         """
         _, labels = self.index.search(x, k, params=params, D=D, I=I)  # type:ignore
         documents: list[Document] = []
-        query = (
-            SELECT_VECTORS_META
-            if return_embeddings
-            else SELECT_VECTORS_META_NO_EMBEDDINGS
-        )
+        query = SELECT_VECTORS_META if return_embeddings else SELECT_VECTORS_META_NO_EMBEDDINGS
         for idx in labels[0]:
             res = self._conn.execute(query, {"vector_id": int(idx)}).fetchone()
             if res:
@@ -95,9 +91,6 @@ class NaanDB:
             embeddings: vectors to add to the FAISS index
             texts: list of text to store as metadata
         """
-        print(len(embeddings), len(texts))
-        assert len(embeddings) == len(texts)
-
         next_id = self.index.ntotal  # type:ignore
         self.index.add(embeddings)  # type:ignore
         faiss.write_index(self.index, str(self._storage.index_file))

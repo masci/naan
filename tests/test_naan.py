@@ -1,7 +1,7 @@
-import pytest
-import faiss
 import duckdb
+import faiss
 import numpy as np
+import pytest
 
 from naan import NaanDB
 from naan.__about__ import __version__
@@ -38,7 +38,7 @@ def test_add(tmp_path, index):
     texts = ["foo"] * 10
     db = NaanDB(tmp_path / "test", index)
     db.add(vectors, texts)
-    tot = db._conn.execute("SELECT COUNT(*) FROM vectors_meta;").fetchone()
+    tot = db._conn.execute("SELECT COUNT(*) FROM vectors_meta;").fetchone()  # noqa
     assert tot == (10,)
 
 

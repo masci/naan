@@ -32,7 +32,7 @@ def test_init_folder_exists_not_empty(tmp_path):
     with open(tmp_path / "test" / "foo", "w") as f:
         f.write("test")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Directory not empty and not a Naan database"):
         StorageFolder(tmp_path / "test")
 
     # force overwrite
