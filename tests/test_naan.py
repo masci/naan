@@ -1,5 +1,3 @@
-from unittest import mock
-
 import duckdb
 import faiss
 import numpy as np
@@ -45,7 +43,7 @@ def test_add(tmp_path, index):
 
 
 def test_add_error_not_trained(tmp_path, monkeypatch):
-    monkeypatch.setattr(NaanDB, "_init", lambda x: True)
+    monkeypatch.setattr(NaanDB, "_init", lambda _: True)
     monkeypatch.setattr(NaanDB, "is_trained", False)
     db = NaanDB(tmp_path / "test", None)
     with pytest.raises(ValueError, match="The index needs to be trained"):

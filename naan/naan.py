@@ -74,11 +74,7 @@ class NaanDB:
         """
         _, labels = self.index.search(x, k, params=params, D=D, I=I)  # type:ignore
         documents: list[Document] = []
-        query = (
-            SELECT_VECTORS_META
-            if return_embeddings
-            else SELECT_VECTORS_META_NO_EMBEDDINGS
-        )
+        query = SELECT_VECTORS_META if return_embeddings else SELECT_VECTORS_META_NO_EMBEDDINGS
         for idx in labels[0]:
             res = self._conn.execute(query, {"vector_id": int(idx)}).fetchone()
             if res:
