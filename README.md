@@ -1,17 +1,5 @@
-# naan
-
 [![PyPI - Version](https://img.shields.io/pypi/v/naan.svg)](https://pypi.org/project/naan)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/naan.svg)](https://pypi.org/project/naan)
-
------
-
-**Table of Contents**
-
-- [naan](#naan)
-  - [What is Naan?](#what-is-naan)
-  - [Installation](#installation)
-  - [Index data](#index-data)
-  - [License](#license)
 
 ## What is Naan?
 
