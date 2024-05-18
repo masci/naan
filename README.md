@@ -8,9 +8,17 @@
 **Table of Contents**
 
 - [naan](#naan)
+  - [What is Naan?](#what-is-naan)
   - [Installation](#installation)
   - [Index data](#index-data)
   - [License](#license)
+
+## What is Naan?
+
+- Naan is a wrapper around FAISS indexes that provides metadata storage and retrieval for the vectors added to the index.
+- Naan's job is to eliminate the tedious task of keeping around the original content before it's encoded
+and added to the index.
+- Naan is NOT a vector database. All the vector-search operations are demanded to FAISS.
 
 ## Installation
 
