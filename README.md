@@ -31,8 +31,9 @@ pip install naan
 To see Naan in action, let's first get some data to embed:
 
 ```python
+from io import StringIO
 import requests
-from sentence_transformers import SentenceTransformer
+import json
 
 
 res = requests.get("https://raw.githubusercontent.com/masci/naan/main/example/sentences.json")
@@ -48,7 +49,7 @@ import faiss
 
 
 model = SentenceTransformer("bert-base-nli-mean-tokens")
-sentence_embeddings = model.encode(sentences[:100])
+sentence_embeddings = model.encode(sentences)
 dim = sentence_embeddings.shape[1]
 index = faiss.IndexFlatL2(dim)
 ```
@@ -75,10 +76,9 @@ query_embeddings = model.encode(["The book is on the table"])
 results = db.search(query_embeddings, 3)
 for result in results:
     print(result)
-# (5799, 'Two girls are laughing and other girls are watching them')
-# (20303, 'A group of football players is running in the field')
-# (14418, 'Four boys are sitting in a muddy stream.')
-# (28922, 'A group of people playing football is running in the field')
+# Document(vector_id=11451, content='A group of people sitting around a desk.', embeddings=None)
+# Document(vector_id=2754, content='A close-up picture of a desk with a computer and papers on it.', embeddings=None)
+# Document(vector_id=11853, content='A computer on a desk.', embeddings=None)
 ```
 
 ## License
