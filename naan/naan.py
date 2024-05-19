@@ -74,7 +74,11 @@ class NaanDB:
         """
         _, labels = self.index.search(x, k, params=params, D=D, I=I)  # type:ignore
         documents: list[Document] = []
-        query = SELECT_VECTORS_META if return_embeddings else SELECT_VECTORS_META_NO_EMBEDDINGS
+        query = (
+            SELECT_VECTORS_META
+            if return_embeddings
+            else SELECT_VECTORS_META_NO_EMBEDDINGS
+        )
         for idx in labels[0]:
             res = self._conn.execute(query, {"vector_id": int(idx)}).fetchone()
             if res:
@@ -83,20 +87,39 @@ class NaanDB:
 
         return documents
 
-    def add(self, embeddings, texts):
+    def add(
+        self,
+        embeddings: list[float],
+        texts: list[str],
+        meta: list[dict[str, type]] | dict[str, type] | None = None,
+    ):
         """
         Add contents to the Naan database.
 
         Parameters:
             embeddings: vectors to add to the FAISS index
             texts: list of text to store as metadata
+            meta: (optional) a dictionary containing the metadata for all the embeddings,
+                or a list of metadata dictionaries one for each embedding.
         """
         if not self.is_trained:
             msg = "The index needs to be trained before adding data."
             raise ValueError(msg)
+
+        if len(embeddings) != len(texts):
+            msg = "The number of embeddings must match the number of texts."
+            raise ValueError(msg)
+
+        if isinstance(meta, list) and len(meta) != len(texts):
+            msg = "The number of metadata objects must match the number of texts."
+            raise ValueError(msg)
+
+        # Store vectors
         next_id = self.index.ntotal  # type:ignore
         self.index.add(embeddings)  # type:ignore
         faiss.write_index(self.index, str(self._storage.index_file))
+
+        # Store text and metadata
         self._conn.execute("BEGIN;")
         for i, text in enumerate(texts):
             self._conn.execute(
