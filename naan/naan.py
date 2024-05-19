@@ -12,9 +12,9 @@ from .document import Document
 from .filesystem import StorageFolder
 from .queries import (
     CREATE_VECTORS_META,
-    INSERT_VECTORS_META,
-    SELECT_VECTORS_META,
-    SELECT_VECTORS_META_NO_EMBEDDINGS,
+    INSERT_VECTORS,
+    SELECT_VECTORS,
+    SELECT_VECTORS_NO_EMBEDDINGS,
 )
 
 
@@ -74,11 +74,7 @@ class NaanDB:
         """
         _, labels = self.index.search(x, k, params=params, D=D, I=I)  # type:ignore
         documents: list[Document] = []
-        query = (
-            SELECT_VECTORS_META
-            if return_embeddings
-            else SELECT_VECTORS_META_NO_EMBEDDINGS
-        )
+        query = SELECT_VECTORS if return_embeddings else SELECT_VECTORS_NO_EMBEDDINGS
         for idx in labels[0]:
             res = self._conn.execute(query, {"vector_id": int(idx)}).fetchone()
             if res:
@@ -123,7 +119,7 @@ class NaanDB:
         self._conn.execute("BEGIN;")
         for i, text in enumerate(texts):
             self._conn.execute(
-                INSERT_VECTORS_META,
+                INSERT_VECTORS,
                 {"vector_id": next_id + i, "text": text, "embeddings": embeddings[i]},
             )
         self._conn.execute("COMMIT;")

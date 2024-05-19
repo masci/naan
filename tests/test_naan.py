@@ -38,7 +38,7 @@ def test_add(tmp_path, index):
     texts = ["foo"] * 10
     db = NaanDB(tmp_path / "test", index)
     db.add(vectors, texts)
-    tot = db._conn.execute("SELECT COUNT(*) FROM vectors_meta;").fetchone()  # noqa
+    tot = db._conn.execute("SELECT COUNT(*) FROM vectors;").fetchone()  # noqa
     assert tot == (10,)
 
 
