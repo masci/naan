@@ -50,6 +50,18 @@ def test_add_error_not_trained(tmp_path, monkeypatch):
         db.add([], [])
 
 
+def test_add_size_mismatch(tmp_path, index):
+    db = NaanDB(tmp_path / "test", index)
+    with pytest.raises(ValueError, match="The number of embeddings must match"):
+        db.add([1], [])
+
+    with pytest.raises(
+        ValueError,
+        match="The number of metadata objects must match the number of texts",
+    ):
+        db.add([1], ["foo"], [])
+
+
 def test_search(tmp_path, index):
     vectors = np.array([np.random.rand(384) for i in range(10)])
     texts = ["foo"] * 10
