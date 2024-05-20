@@ -7,6 +7,7 @@ from pathlib import Path
 import duckdb
 import faiss
 import numpy as np
+from numpy.typing import NDArray
 
 from .document import Document
 from .filesystem import StorageFolder
@@ -85,7 +86,7 @@ class NaanDB:
 
     def add(
         self,
-        embeddings: list[float],
+        embeddings: NDArray | list[float],
         texts: list[str],
         meta: list[dict[str, type]] | dict[str, type] | None = None,
     ):
