@@ -3,17 +3,15 @@
 # SPDX-License-Identifier: MIT
 
 CREATE_VECTORS_META = """
-CREATE SEQUENCE vectors_id START 1;
 CREATE TABLE vectors (
-    id INTEGER PRIMARY KEY default nextval('vectors_id'),
-    vector_id INTEGER,
+    vector_id INTEGER PRIMARY KEY,
     text VARCHAR,
     embeddings DOUBLE[],
 );
 CREATE SEQUENCE vectors_meta_id START 1;
 CREATE TABLE vectors_meta (
     id INTEGER PRIMARY KEY default nextval('vectors_meta_id'),
-    vector_id INTEGER REFERENCES vectors(id),
+    vector_id INTEGER REFERENCES vectors(vector_id),
     key VARCHAR,
     value UNION(num DOUBLE, str VARCHAR)
 );
@@ -21,9 +19,13 @@ CREATE TABLE vectors_meta (
 
 INSERT_VECTORS = """
 INSERT INTO vectors(vector_id, text, embeddings)
-VALUES ($vector_id, $text, $embeddings)
-RETURNING id;
+VALUES ($vector_id, $text, $embeddings);
 """.strip()
+
+INSERT_META = """
+INSERT INTO vectors_meta (vector_id, key, value)
+VALUES ($vector_id, $key, $value)
+"""
 
 SELECT_VECTORS = """
 SELECT (vector_id, text, embeddings) FROM vectors WHERE vector_id == $vector_id

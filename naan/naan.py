@@ -2,7 +2,9 @@
 #
 # SPDX-License-Identifier: MIT
 
+from itertools import zip_longest
 from pathlib import Path
+from typing import cast, Any
 
 import duckdb
 import faiss
@@ -16,6 +18,7 @@ from .queries import (
     INSERT_VECTORS,
     SELECT_VECTORS,
     SELECT_VECTORS_NO_EMBEDDINGS,
+    INSERT_META,
 )
 
 
@@ -86,7 +89,7 @@ class NaanDB:
 
     def add(
         self,
-        embeddings: NDArray | list[float],
+        embeddings: NDArray | list[list[float]],
         texts: list[str],
         meta: list[dict[str, type]] | dict[str, type] | None = None,
     ):
@@ -107,22 +110,39 @@ class NaanDB:
             msg = "The number of embeddings must match the number of texts."
             raise ValueError(msg)
 
-        if isinstance(meta, list) and len(meta) != len(texts):
-            msg = "The number of metadata objects must match the number of texts."
-            raise ValueError(msg)
+        if isinstance(embeddings, list):
+            embeddings = np.array(embeddings)
+
+        if meta is None:
+            meta = {}
+
+        if isinstance(meta, list):
+            if len(meta) != len(texts):
+                msg = "The number of metadata objects must match the number of texts."
+                raise ValueError(msg)
+            # each text has its own meta dictionary
+            items = zip_longest(texts, meta)
+        else:
+            # meta is a single dictionary, use it for each text to add
+            items = zip_longest(texts, [], fillvalue=meta)
 
         # Store vectors
         next_id = self.index.ntotal  # type:ignore
         self.index.add(embeddings)  # type:ignore
         faiss.write_index(self.index, str(self._storage.index_file))
 
-        # Store text and metadata
         self._conn.execute("BEGIN;")
-        for i, text in enumerate(texts):
+        for i, (text, m) in enumerate(items):
+            m = cast(dict[str, Any], m)
+            vector_id = next_id + i
             self._conn.execute(
                 INSERT_VECTORS,
-                {"vector_id": next_id + i, "text": text, "embeddings": embeddings[i]},
+                {"vector_id": vector_id, "text": text, "embeddings": embeddings[i]},
             )
+            for k, v in m.items():
+                self._conn.execute(
+                    INSERT_META, {"vector_id": vector_id, "key": k, "value": v}
+                )
         self._conn.execute("COMMIT;")
 
     def _init(self):
