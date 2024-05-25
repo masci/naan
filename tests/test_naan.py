@@ -54,12 +54,32 @@ def test_add(db, vectors):
     assert tot == (10,)
 
 
+def test_add_list_of_floats(db):
+    texts = ["foo"] * 5
+    vectors = [[0] * 384] * 5
+    db.add(vectors, texts)
+    tot = db._conn.execute("SELECT COUNT(*) FROM vectors;").fetchone()  # noqa
+    assert tot == (5,)
+
+
 def test_add_metadata(db, vectors):
     texts = ["foo"] * len(vectors)
     common_metadata = {"tag": "test_add_metadata"}
     db.add(vectors, texts, common_metadata)
-    tot = db._conn.execute("SELECT COUNT(*) FROM vectors_meta;").fetchone()  # noqa
-    assert tot == (10,)
+    results = db._conn.execute("SELECT * FROM vectors_meta;").fetchall()
+    assert len(results) == 10
+    for res in results:
+        assert res[3] == "test_add_metadata"
+
+
+def test_add_metadata_list(db, vectors):
+    texts = ["foo"] * len(vectors)
+    metadata = [{"tag": f"tag_{i}"} for i in range(10)]
+    db.add(vectors, texts, metadata)
+    results = db._conn.execute("SELECT * FROM vectors_meta;").fetchall()
+    assert len(results) == 10
+    for i, res in enumerate(results):
+        assert res[3] == f"tag_{i}"
 
 
 def test_add_error_not_trained(tmp_path, monkeypatch):
