@@ -1,5 +1,6 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/naan.svg)](https://pypi.org/project/naan)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/naan.svg)](https://pypi.org/project/naan)
+[![Test](https://github.com/masci/naan/actions/workflows/test.yml/badge.svg)](https://github.com/masci/naan/actions/workflows/test.yml)
 
 ## What is Naan?
 
