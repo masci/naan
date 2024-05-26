@@ -4,7 +4,7 @@
 
 from itertools import zip_longest
 from pathlib import Path
-from typing import cast, Any
+from typing import Any, cast
 
 import duckdb
 import faiss
@@ -15,10 +15,10 @@ from .document import Document
 from .filesystem import StorageFolder
 from .queries import (
     CREATE_VECTORS_META,
+    INSERT_META,
     INSERT_VECTORS,
     SELECT_VECTORS,
     SELECT_VECTORS_NO_EMBEDDINGS,
-    INSERT_META,
 )
 
 
@@ -140,9 +140,7 @@ class NaanDB:
                 {"vector_id": vector_id, "text": text, "embeddings": embeddings[i]},
             )
             for k, v in m.items():
-                self._conn.execute(
-                    INSERT_META, {"vector_id": vector_id, "key": k, "value": v}
-                )
+                self._conn.execute(INSERT_META, {"vector_id": vector_id, "key": k, "value": v})
         self._conn.execute("COMMIT;")
 
     def _init(self):
