@@ -25,6 +25,7 @@ dependencies = [
   "numpy",
   "faiss-cpu",
   "duckdb",
+  "pyparsing",
 ]
 dynamic = ["version"]
 
