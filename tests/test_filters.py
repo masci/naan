@@ -1,7 +1,7 @@
 import pytest
 from pyparsing import ParseException
 
-from naan.filters import expression
+from naan.filters import expression, evaluate_expression
 
 
 @pytest.fixture
@@ -13,35 +13,6 @@ def metadata():
         "Genre": "Fiction",
         "Rating": 4.5,
     }
-
-
-# Function to evaluate a parsed filter expression
-def evaluate_expression(expression, metadata):
-    # Assume the expression is in the form [operand, operator, operand]
-    if len(expression) != 3:
-        raise ValueError("Invalid expression format")
-
-    key, operator, value = expression
-
-    if key not in metadata:
-        return False
-
-    metadata_value = metadata[key]
-
-    if operator == "==":
-        return metadata_value == value
-    elif operator == "!=":
-        return metadata_value != value
-    elif operator == ">":
-        return metadata_value > value
-    elif operator == "<":
-        return metadata_value < value
-    elif operator == ">=":
-        return metadata_value >= value
-    elif operator == "<=":
-        return metadata_value <= value
-    else:
-        raise ValueError("Unknown operator")
 
 
 @pytest.mark.parametrize(

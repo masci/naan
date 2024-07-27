@@ -34,3 +34,8 @@ SELECT (vector_id, text, embeddings) FROM vectors WHERE vector_id == $vector_id
 SELECT_VECTORS_NO_EMBEDDINGS = """
 SELECT (vector_id, text) FROM vectors WHERE vector_id == $vector_id
 """.strip()
+
+
+def get_select_query(return_embeddings: bool, filter: str | None = None):
+    q = SELECT_VECTORS if return_embeddings else SELECT_VECTORS_NO_EMBEDDINGS
+    return q

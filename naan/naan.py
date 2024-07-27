@@ -13,13 +13,7 @@ from numpy.typing import NDArray
 
 from .document import Document
 from .filesystem import StorageFolder
-from .queries import (
-    CREATE_VECTORS_META,
-    INSERT_META,
-    INSERT_VECTORS,
-    SELECT_VECTORS,
-    SELECT_VECTORS_NO_EMBEDDINGS,
-)
+from .queries import CREATE_VECTORS_META, INSERT_META, INSERT_VECTORS, get_select_query
 
 
 class NaanDB:
@@ -59,6 +53,7 @@ class NaanDB:
         D=None,  # noqa
         I=None,  # noqa
         return_embeddings: bool = False,
+        filter: str | None = None,
     ) -> list[Document]:
         """
         Search for vectors in the Naan database.
@@ -78,7 +73,7 @@ class NaanDB:
         """
         _, labels = self.index.search(x, k, params=params, D=D, I=I)  # type:ignore
         documents: list[Document] = []
-        query = SELECT_VECTORS if return_embeddings else SELECT_VECTORS_NO_EMBEDDINGS
+        query = get_select_query(return_embeddings, filter)
         for idx in labels[0]:
             res = self._conn.execute(query, {"vector_id": int(idx)}).fetchone()
             if res:
@@ -140,7 +135,9 @@ class NaanDB:
                 {"vector_id": vector_id, "text": text, "embeddings": embeddings[i]},
             )
             for k, v in m.items():
-                self._conn.execute(INSERT_META, {"vector_id": vector_id, "key": k, "value": v})
+                self._conn.execute(
+                    INSERT_META, {"vector_id": vector_id, "key": k, "value": v}
+                )
         self._conn.execute("COMMIT;")
 
     def _init(self):
